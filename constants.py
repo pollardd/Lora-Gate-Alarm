@@ -1,0 +1,3 @@
+DEBUG = 1
+LOGTOFILE = True
+ENCRYPTION = True
