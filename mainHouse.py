@@ -55,9 +55,8 @@ import webServer    # Publish the web page and listen for connections
 DEBUG = constants.DEBUG
 LOGTOFILE =  constants.LOGTOFILE
 ENCRYPTION = constants.ENCRYPTION
-
-TIMEZONE = +10                     # Set to your time zone +or- hours from UTC  (No Summertime)
-NTPSERVER = "au.pool.ntp.org"      # change to a time server pool in your local area
+TIMEZONE = constants.TIMEZONE      # Set to your time zone +or- hours from UTC  (No Summertime)
+NTPSERVER = constants.NTPSERVER    # change to a time server pool in your local area
 HZ=900                             # Tone of the sound
 
 # Network Variables
