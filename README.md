@@ -12,7 +12,30 @@ This project uses the follwoing hardware
 Mounting boxes etc.
 
 ## Installation
-<TODO>
+The file listing below describes which files are required on the main (house) device and which are required on the remote (gate) device(s)
+FileName                    Location Device     Description
+=============================================================================================
+blink.py                    Main                Display Errors and Remote gate open events on the LED
+constants.py                Both                Debug and encryption settings
+counters.py                 Main                Stores the gate open count
+dateTime.py                 Main                Formats date time to your prefferences / location.
+debug.py                    Both                Debug Routines
+debugCounter.txt            Both                Shared location for debug counter / ID
+encryption.py               Both                Shared calls to encrypt decrypt routines
+GenerateEncryptionKey.py    Main                Generate secret encryption key to be saved on all devices (secrets.py)
+loraMessage.py              Both                Format message into Json format 
+mainGate.py                 Remote              Main entry point for remote devices.  Save as main.py to auto start
+mainHouse.py                Main                Main entry point for main device.  Save as main.py to auto start
+mpyaes.py                   Both                Encrypt and Decrypt routines
+ntpClientTZ.py              Main                Update time from network using sntp with time zone parameters.
+secrets.py                  Remote              Contains Encryption and Decryption keys
+secretsHouse.py             Main                Contains Encryptions keys and WIFI creds.
+subprocess.py               Main                Run second thread to receive and transmit lora messages
+sx1262.py                   Both                Third Party Lora Module code 
+sx126x.py                   Both                Third Party Lora Module code
+tone.py                     Main                Play the alert sound
+webServer.py                Main                User web interface for monitoring and counter reset
+_sx126x.py                  Both                Third Party Lora Module code
 
 ## Debugging
 <TODO>
