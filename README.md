@@ -1,6 +1,7 @@
 # Lora-Gate-Alarm
 ```
 Receive a door bell style tone when a gate is opened a long distance away wirelessly using 2x Raspberry Pi Pico and LoRa modules.  
+This project is still in "Alpha" release and may not yet function as described. Updates to follow soon.
 
 This project uses the follwoing hardware 
 1x Raspberry Pi Pico W 2022 (wifi model) 
