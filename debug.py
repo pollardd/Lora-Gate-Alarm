@@ -1,6 +1,6 @@
 import time
 import micropython
-import counters
+# import counters
 import _thread
 sLock = _thread.allocate_lock()
 DEBUGCOUNTER = "debugCounter.txt"
