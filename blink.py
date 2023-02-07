@@ -12,6 +12,9 @@ ENCRYPTION = constants.ENCRYPTION
 button =  Pin(14, Pin.IN, Pin.PULL_UP)  # Physical Pin 19 Gnd = 13
 
 def flash(ledPin, long, short):
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "blink.flash()", " ", LOGTOFILE)
+
     led = Pin(ledPin, Pin.OUT)
 
     # Long
@@ -39,25 +42,30 @@ def flash(ledPin, long, short):
     checkButtonPress(1.5)  # Check the button while waiting between flash groups
 
 def checkButtonPress(seconds):
-    
     # If Button pressed clear the flash count
     # This method also acts as a timer for the main program loop
+    
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "blink.checkButtonPress()", " ", LOGTOFILE)
+
     while seconds>0:
-        if(DEBUG >=2):
-            debug.debug(DEBUG, "checkButtonPress(seconds)    ", "seconds="+str(seconds), LOGTOFILE)
+        if(DEBUG >=3):
+            debug.debug(DEBUG, "checkButtonPress(seconds)", "seconds="+str(seconds), LOGTOFILE)
 
         if(getButton()==1):
             if(DEBUG >=1):
                 debug.debug(DEBUG, "checkButtonPress(seconds)    ", "Reset Count Button Pressed, openCount=0", LOGTOFILE)
                 counters.openCount=0
-        #time.sleep(0.125)   
-        seconds=seconds - 0.25
+        time.sleep(0.125)   
+        seconds=seconds - 0.125
 
 def getButton():
     # Invert button value so 1=button pressed and 0=not pressed
-    buttonPressed= not button.value()
     if(DEBUG >=2):
+        debug.debug(DEBUG, "blink.getButton()", " ", LOGTOFILE)
+
+
+    buttonPressed= not button.value()
+    if(DEBUG >=3):
         debug.debug(DEBUG, "getButton()    ", "buttonPressed="+ str(buttonPressed), LOGTOFILE)
     return buttonPressed
-
-
