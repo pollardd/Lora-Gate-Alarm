@@ -1,6 +1,6 @@
 # Lora-Gate-Alarm
 ```
-Receive a door bell style tone when a gate is opened a long distance away using Raspberry Pi Pico and LoRa modules.  
+Receive a door bell style tone when a gate is opened a long distance away wirelessly using 2x Raspberry Pi Pico and LoRa modules.  
 
 This project uses the follwoing hardware 
 1x Raspberry Pi Pico W 2022 (wifi model) 
@@ -17,12 +17,12 @@ MicroPython v1.19.1 on 2022-06-18; Raspberry Pi Pico with RP2040
 Thony Version 4.01
 
 ## Installation
-Modify secrets.py and secretsHouse.py with generated encryption keys using GenerateEncryptionKey.py
+Modify secrets.py with generated encryption keys using GenerateEncryptionKey.py
 Modify secretsHouse.py with your Wifi SSID and password
 Set a time zone in hours plus or minus UTC in constants.py  (no automatic daylight savings adjustments are made)
 Set a NTP time pool server local to you in constants.py 
 Save the files to the required devices as listed below.
-Disable debugging in constants.py once things are running smoothly
+Disable debugging in constants.py by setting it to 0 once things are running smoothly
 
 The file listing below describes which files are required on the main (house) device and which are required on the remote (gate) device(s)
 FileName                    Location Device     Description
@@ -73,8 +73,9 @@ Original source and modified code is included in this repository
 ##### WIFI Network and NTP Time updates
     https://gist.github.com/aallan/581ecf4dc92cd53e3a415b7c33a1147c
 
-##### Web Server
+##### Web Server 
     https://how2electronics.com/raspberry-pi-pico-w-web-server-tutorial-with-micropython/
 
 ## How it works
-<TODO>
+For a full description see my project page on Core Electronics where I sourced most of the hardware.
+<TODO> Add link to project page here
