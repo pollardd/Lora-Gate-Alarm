@@ -1,25 +1,21 @@
 # This file (mainHouse.py) is executed on the HOUSE Device
 # Rename to main.py so it executes at startup
-# Intented to run on a Raspberry Pi Pico W (wifi)
+# Intended to run on a Raspberry Pi Pico W (wifi)
 # ==========================================
 #
 # The Lora Connection and configuration is based on an this example.
 # https://github.com/ehong-tl/micropySX126X
 #
-# Save the following files to the root folder of the pico same as main.py
+# Save the following files to the root folder of the pico same location as main.py
 # sx1262.py, sx126x.py, _sx126x.py
 
 # Network Connection and sntp time settings modified from example found here
 # https://gist.github.com/aallan/581ecf4dc92cd53e3a415b7c33a1147c
-
 # Threading implementation is based on this example
 # https://circuitdigest.com/microcontroller-projects/dual-core-programming-on-raspberry-pi-pico-using-micropython
 # =========================================================================
 # Asked a question re Recursion Limit Error
 # https://stackoverflow.com/questions/75257342/micropython-runtimeerror-maximum-recursion-depth-exceeded
-
-# import micropython
-# micropython.mem_info(1)
 
 # Not sure why I need this
 # Without the garbage collection, I get the following error message
@@ -43,12 +39,13 @@ from machine import Pin, PWM
 # Home baked imports
 import subprocess   # Methods that are run in Thread 2
 import debug        # My debuging routine
-import secretsHouse # file containing wifi ssid and password plus Encryption key and IV values
+import secrets      # file Encryption key and IV values
+import secretsHouse # file containing wifi ssid and password 
 import dateTime     # My Date Time formatting routine
 import blink        # Reuseable code to flash the LED error messages or open gate count
 import constants    # Constants used on all devices
 import counters     # Counter variables shared between modules
-import encryption   # Encrypt and Decrypt routines
+#import encryption   # Encrypt and Decrypt routines
 import webServer    # Publish the web page and listen for connections
 
 # Constants
@@ -57,11 +54,10 @@ LOGTOFILE =  constants.LOGTOFILE
 ENCRYPTION = constants.ENCRYPTION
 TIMEZONE = constants.TIMEZONE      # Set to your time zone +or- hours from UTC  (No Summertime)
 NTPSERVER = constants.NTPSERVER    # change to a time server pool in your local area
-HZ=900                             # Tone of the sound
 
 # Network Variables
 ip=""                   # Global variable to hold the wifi connection IP address
-sta_if = network.WLAN(network.STA_IF)
+sta_if = network.WLAN(network.STA_IF)  # Set the network interface name
 
 # Temperature Sensor
 sensor_temp = machine.ADC(4)
@@ -74,7 +70,12 @@ led = Pin(ledPin, Pin.OUT)              # Define pin as output
 buzzer = PWM(Pin(13))                   # Physical pin 17 Gnd = 18
 
 # Start a new counter each time the program starts
+if(DEBUG >=1):
+    debug.debug(DEBUG, "Init", "Pre Reset Debug Counter" , LOGTOFILE)
 debug.resetCounter()
+
+if(DEBUG >=1):
+    debug.debug(DEBUG, "Init", "Pre Method Defintions" , LOGTOFILE)
 
 # Method Definitions
 # =========================================
@@ -84,7 +85,7 @@ def connectToWifi():
     global sta_if
     
     if(DEBUG >=1):
-        debug.debug(DEBUG, "connectToWifi()    ", "Connecting to WIFI " + secretsHouse.ssid, LOGTOFILE)
+        debug.debug(DEBUG, "connectToWifi()", "Connecting to WIFI " + secretsHouse.ssid, LOGTOFILE)
 
     connectCount=0
     sta_if = network.WLAN(network.STA_IF)
@@ -98,40 +99,50 @@ def connectToWifi():
         if not(sta_if.isconnected()):
             connectCount=connectCount+1
             if(DEBUG >=1):
-                debug.debug(DEBUG, "connectToWifi()    ", "Connecting to WIFI  Count=" + str(connectCount) , LOGTOFILE)
+                debug.debug(DEBUG, "connectToWifi()", "Connecting to WIFI  Count=" + str(connectCount) , LOGTOFILE)
         else:
             connectCount=6
 
     if not(sta_if.isconnected()):
-        debug.debug(DEBUG, "connectToWifi()    ", "Connect to Network: Failed:" + str(connectCount), LOGTOFILE)
+        if(DEBUG >=0):
+            debug.debug(DEBUG, "connectToWifi()", "Connect to Network: Failed:" + str(connectCount), LOGTOFILE)
         # Error indication on LED
         flash(1,2)  # Fatal error, no return from this
 
     if(DEBUG >=1):
         ip=sta_if.ifconfig()[0]
-        debug.debug(DEBUG, "connectToWifi()    ", "Connected to WIFI, IP="+str(ip), LOGTOFILE)
+        debug.debug(DEBUG, "connectToWifi()", "Connected to WIFI, IP="+str(ip), LOGTOFILE)
     time.sleep(5)
 
 def setLocalClock():
     # Retrieve Time from smtp and set local clock
-    try:    
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "setLocalClock()", " ", LOGTOFILE)
+        timeStamp=str(dateTime.formattedTime())
+        debug.debug(DEBUG, "setLocalClock()", "Time before ntp update=" + str(timeStamp), LOGTOFILE)
+        dateStamp=str(dateTime.formattedDate())
+        debug.debug(DEBUG, "setLocalClock()", "Date before ntp update=" + str(dateStamp), LOGTOFILE)
+
+    try:     
         ntpClientTZ.setTime(TIMEZONE, NTPSERVER, DEBUG, LOGTOFILE)
 
     except Exception as errorMsg:
         # This message can not be disabled by DEBUG setting
-        debug.debug(DEBUG, "setLocalClock()    ", "Set Time From Network: Error=" + str(errorMsg), LOGTOFILE)
+        if(DEBUG >=0):
+            debug.debug(DEBUG, "setLocalClock()", "Set Time From Network: Error=" + str(errorMsg), LOGTOFILE)
         flash(1,3)  # Fatal error, no return from this
 
     if(DEBUG >=1):
         timeStamp=str(dateTime.formattedTime())
-        debug.debug(DEBUG, "setLocalClock()    ", "Time after ntp update=" + str(timeStamp), LOGTOFILE)
+        debug.debug(DEBUG, "setLocalClock()", "Time after ntp update=" + str(timeStamp), LOGTOFILE)
         dateStamp=str(dateTime.formattedDate())
-        debug.debug(DEBUG, "setLocalClock()    ", "Date after ntp update=" + str(dateStamp), LOGTOFILE)
+        debug.debug(DEBUG, "setLocalClock()", "Date after ntp update=" + str(dateStamp), LOGTOFILE)
 
 def flash(long, short):
     # Flash the LED to indicate a gate open event or error
     #=====================================================
-    # short flash only, number of gate openes since last reset (Manual button to reset).
+    # short flash only, indicates the number of gate openes since
+    # the last reset (Manual button to reset).
 
     # Flash the LED to Indicate an error Long flash then Short flashe(s).
     # 1 long, 1 short = Low voltage at mainGate.py
@@ -144,23 +155,36 @@ def flash(long, short):
         debug.debug(DEBUG, "flash(long,short )"+ str(long) +" "+ str(short) +"   " , "Flash Message", LOGTOFILE)
 
     if(long>0):
-        # This is a fatal error and the program must be restarted
-        # to recover from this error
+        # This indicates a fatal error and the program must be restarted
+        # to recover from this type of error
 
         while True:
             blink.flash(ledPin,long,short)
     else:
         blink.flash(ledPin,long,short)
         
+if(DEBUG >=1):
+    debug.debug(DEBUG, "Init", "End of Method Definition" , LOGTOFILE)
 
 # End of method Definitions.
 
 # Start a new thread for Lora Communications and button monitoring
-# mainHouse thread runs Web Server.
+# This main thread runs the Web Server.
+_thread.stack_size(6*1024)   # Default stack size for thread two is only 4k
+
+if(DEBUG >=1):
+    debug.debug(DEBUG, "Init", "Pre Start Thread Two" , LOGTOFILE)
+
 _thread.start_new_thread(subprocess.subMain,())
+
+if(DEBUG >=1):
+    debug.debug(DEBUG, "Init", "Post Start Thread Two" , LOGTOFILE)
 
 # Main Program Loop
 def mainLoop():
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "mainLoop()", " ", LOGTOFILE)
+
     loopCount=0
     counters.openCount=0
 
@@ -174,13 +198,13 @@ def mainLoop():
     setLocalClock()
 
     while True:
-        # Incoming Messages Events handeled in "cb(events)"
+        # Incoming Messages Events handeled in "subprocess.cb(events)"
         # Event Reset button monitored in checkButtonPress()
     
         loopCount=loopCount+1
 
-        if(DEBUG >=1):
-            debug.debug(DEBUG, "mainLoop()        ", "Main While Loop Count="+str(loopCount), LOGTOFILE)
+        if(DEBUG >=2):
+            debug.debug(DEBUG, "mainLoop()", "Main While Loop Count="+str(loopCount), LOGTOFILE)
         
         # Listen for connections on port 80
         webServer.main(sta_if,ip)
