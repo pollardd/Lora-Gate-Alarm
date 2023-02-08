@@ -169,13 +169,14 @@ if(DEBUG >=1):
 # End of method Definitions.
 
 # Start a new thread for Lora Communications and button monitoring
-# This main thread runs the Web Server.
+# The main thread runs the Web Server.
 _thread.stack_size(6*1024)   # Default stack size for thread two is only 4k
 
 if(DEBUG >=1):
-    debug.debug(DEBUG, "Init", "Pre Start Thread Two" , LOGTOFILE)
-
-_thread.start_new_thread(subprocess.subMain,())
+    debug.debug(DEBUG, "Init", "Pre Main" , LOGTOFILE)
+print("Init Pre Main mem="+ str(gc.mem_free()))
+gc.collect()
+print("Init Pre Main mem="+ str(gc.mem_free()))
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "Init", "Post Start Thread Two" , LOGTOFILE)
@@ -197,6 +198,9 @@ def mainLoop():
     # Set the local clock from the internet using the ntp protocol. 
     setLocalClock()
 
+    # Start thread two
+    _thread.start_new_thread(subprocess.subMain,())
+
     while True:
         # Incoming Messages Events handeled in "subprocess.cb(events)"
         # Event Reset button monitored in checkButtonPress()
@@ -210,3 +214,4 @@ def mainLoop():
         webServer.main(sta_if,ip)
 
 mainLoop()
+
