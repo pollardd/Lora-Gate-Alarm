@@ -202,9 +202,9 @@ def sendTimeUpdate():
 # End of method Definitions.
 
 def subMain():
-    #print("main() Subprocess mem before gc="+ str(gc.mem_free()))
+    print("main() Subprocess mem before gc="+ str(gc.mem_free()))
     gc.collect()
-    #print("main() Subprocess mem after gc="+ str(gc.mem_free()))
+    print("main() Subprocess mem after gc="+ str(gc.mem_free()))
 
     if(DEBUG >=1):
         debug.debug(DEBUG, "subprocess.subMain()", "Start....", LOGTOFILE)
