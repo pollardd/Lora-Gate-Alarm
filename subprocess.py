@@ -108,7 +108,7 @@ def processMessage(msg,err):
         debug.debug(DEBUG, "processMessage(msg,err)", "DSTDEVICE="+DSTDEVICE, LOGTOFILE)
 
     # Don't forget the device SRCDEVICE is the name of this machine (receiving the message)
-    if(destination == SRCSTDEVICE): 
+    if(destination == SRCDEVICE): 
         compareTimeStamps(jsonDict)
         checkGateStatus(jsonDict)
         checkHeartBeat(jsonDict)
