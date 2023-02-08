@@ -80,11 +80,11 @@ def cb(events):
 
 def processMessage(msg,err):
     # Process the incoming message
-        if(DEBUG >=1):
-	        debug.debug(DEBUG, "processMessage(msg,err)    ", "Message Received=" + str(msg), LOGTOFILE)
-		debug.debug(DEBUG, "processMessage(msg,err)    ", "msg type="+ str(type(msg)), LOGTOFILE)
-        if(DEBUG >=2):
-	     debug.debug(DEBUG, "processMessage(msg,err)    ", "err="+ str(err), LOGTOFILE)
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "processMessage(msg,err)    ", "Message Received=" + str(msg), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(msg,err)    ", "msg type="+ str(type(msg)), LOGTOFILE)
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "processMessage(msg,err)    ", "err="+ str(err), LOGTOFILE)
 
     decryptedMessage=encryption.decryptMessage(msg)     # Decrypt the message 
     decodedMsg=decryptedMessage.decode()                # Decode the byte string into a string
@@ -220,3 +220,4 @@ def subMain():
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "Subprocess Init", "End Method Definitions" , LOGTOFILE)
+
