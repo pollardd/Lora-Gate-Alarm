@@ -2,6 +2,11 @@
 # Keep the SX1262 import at the top to avoid suspected
 # memory fragmentation problems
 
+import gc
+print("subprocess() mem before gc="+ str(gc.mem_free()))
+gc.collect()
+print("subprocess() mem after gc="+ str(gc.mem_free()))
+
 from sx1262 import SX1262    #Lora Library
 import _sx126x
 from machine import Pin, PWM
@@ -9,7 +14,6 @@ import time
 import machine
 import json
 import _thread
-import gc
 
 # Home baked imports
 import debug        # My debuging routine
@@ -80,7 +84,7 @@ def cb(events):
 
 def processMessage(msg,err):
     # Process the incoming message
-    if(DEBUG >=1):
+    if(DEBUG >=2):
         debug.debug(DEBUG, "processMessage(msg,err)    ", "Message Received=" + str(msg), LOGTOFILE)
         debug.debug(DEBUG, "processMessage(msg,err)    ", "msg type="+ str(type(msg)), LOGTOFILE)
     if(DEBUG >=2):
@@ -111,30 +115,63 @@ def processMessage(msg,err):
     if(destination == SRCDEVICE): 
         compareTimeStamps(jsonDict)
         checkGateStatus(jsonDict)
-        checkHeartBeat(jsonDict)
+        if(jsonDict["TextMessage"]=="Heart Beat"):
+            saveHeartBeat()
         
-def checkHeartBeat(jsonDict):
+def saveHeartBeat():
     if(DEBUG >=1):
-        debug.debug(DEBUG, "cHeckHeartBeat(jsonDict)", " ", LOGTOFILE)
+        debug.debug(DEBUG, "saveHeartBeat()    ", "Store Heartbeat hour", LOGTOFILE)
 
-    # 'TextMessage': 'Heart Beat',
+    global previousHeartBeat
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "saveHeartBeat()    ", "previousHeartBeat="+str(previousHearetBeat), LOGTOFILE)
 
-    textMessage = jsonDict["TextMessage"] 
-    if(textMessage=="Heart Beat"):
-        # Get current hour
-        now=time.localtime()
-        #  Get the current hour
-        hour=int(now[3])
+    # Get current time
+    now=time.localtime()
 
-        # If Previous Hour = 0
-            # Save current hour as previous hour
-        # Else
-            # if Current hour >= Previous hour +1
-                # Save current hour as previous hour
-            # esle
-                # display error message
-                # 1 long, 5 short = Heartbeat message timed out
-                
+    #  Get the current hour from the local clock
+    hour=int(now[3])
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "saveHeartBeat()    ", "Current Hour="+str(hour), LOGTOFILE)
+
+    if(hour == 24):
+        hour=0  # Not sure if this will every happen exactly on midnight
+
+    prviousHeartBeat = hour
+        
+def initialiseHeartBeat():
+    global previousHeartBeat
+    # Get current time from the local clock
+    now=time.localtime()
+    
+    #  Get the current hour from the local clock
+    hour=int(now[3])
+    previousHeartBeat=hour
+        
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "initialiseHeartBeat()", "Hour="+str(hour)+"heartBeat="+str(previousHeartBeat), LOGTOFILE)
+    
+def checkHeartBeat():
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "checkHeartBeat()", "Check age of last heart beat", LOGTOFILE)
+
+    global previousHeartBeat
+    # Get current time from the local clock
+    now=time.localtime()
+    
+    #  Get the current hour from the local clock
+    hour=int(now[3])
+
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "checkHeartBeat()", "Hour="+str(hour)+" heartBeat="+str(previousHeartBeat), LOGTOFILE)
+        
+    # Check if heartBeat is old
+    if(hour >= previousHeartBeat +1):
+        # display error message
+        # 1 long, 5 short = Heartbeat message timed out
+        blink.flash(ledPin,1,5)
+        # Note no return from errors with a long flash
+    
 def compareTimeStamps(jsonDict):
     if(DEBUG >=1):
         debug.debug(DEBUG, "compareTimeStamps(jsonDict)    ", "jsonDict="+ str(jsonDict), LOGTOFILE)
@@ -202,22 +239,30 @@ def sendTimeUpdate():
 # End of method Definitions.
 
 def subMain():
-    print("main() Subprocess mem before gc="+ str(gc.mem_free()))
+    print("subMain() Subprocess mem before gc="+ str(gc.mem_free()))
     gc.collect()
-    print("main() Subprocess mem after gc="+ str(gc.mem_free()))
+    print("subMain() Subprocess mem after gc="+ str(gc.mem_free()))
 
     if(DEBUG >=1):
         debug.debug(DEBUG, "subprocess.subMain()", "Start....", LOGTOFILE)
+    
+    # Set the initial heart beat hour
+    initialiseHeartBeat()
 
     loraMessage.sx.setBlockingCallback(False, cb)
     while True:
         if(counters.openCount>0):        # Show the number of gate open events
-            blink.flash(mainHouse.ledpin, 0,counters.openCount)
+            blink.flash(ledPin, 0,counters.openCount)
+        
         if(DEBUG >=1):
             debug.debug(DEBUG, "subprocess.subMain()", "openCount="+ str(counters.openCount) , LOGTOFILE)
+        blink.checkButtonPress(3)
+        
+        # Check if the previousHeartBeat is not more than one hour old
+        checkHeartBeat()
 
-        blink.checkButtonPress(5)
-
+# This message is displayed after all the methods have been defined
+# and before the main method is called
 if(DEBUG >=1):
     debug.debug(DEBUG, "Subprocess Init", "End Method Definitions" , LOGTOFILE)
 
