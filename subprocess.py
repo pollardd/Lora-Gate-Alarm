@@ -35,7 +35,7 @@ DSTDEVICE="MainGate"               #
 messageNumber=10000     # Sequential message number.  (mainGate.py starts at 1)
 gateOpen="False"        # mainHouse device does not monitor the gate
 batteryPercent=0        # mainHouse device is always connected to mains power supply
-previousHeartBeat=0     # Used to chech how long since the last Heart Beat was received
+mainGateHeartBeat=0     # Used to chech how long since the last Heart Beat was received
 
 # Pin Definitions
 ledPin = 5                              # Physical Pin 7  Gnd = 8
@@ -116,46 +116,46 @@ def processMessage(msg,err):
         compareTimeStamps(jsonDict)
         checkGateStatus(jsonDict)
         if(jsonDict["TextMessage"]=="Heart Beat"):
-            saveHeartBeat()
-        
-def saveHeartBeat():
+            saveHeartBeat(jsonDict)
+
+def saveHeartBeat(jsonDict):
     if(DEBUG >=1):
         debug.debug(DEBUG, "saveHeartBeat()    ", "Store Heartbeat hour", LOGTOFILE)
+    if(jsonDict["SRCDEVICE"]=="MainGate"):
+        global mainGateHeartBeat
+        if(DEBUG >=1):
+            debug.debug(DEBUG, "saveHeartBeat()    ", "mainGateHeartBeat="+str(mainGateHeartBeat), LOGTOFILE)
 
-    global previousHeartBeat
-    if(DEBUG >=1):
-        debug.debug(DEBUG, "saveHeartBeat()    ", "previousHeartBeat="+str(previousHearetBeat), LOGTOFILE)
+        # Get current time
+        now=time.localtime()
 
-    # Get current time
-    now=time.localtime()
+        #  Get the current hour from the local clock
+        hour=int(now[3])
+        if(DEBUG >=1):
+            debug.debug(DEBUG, "saveHeartBeat()    ", "Current Hour="+str(hour), LOGTOFILE)
 
-    #  Get the current hour from the local clock
-    hour=int(now[3])
-    if(DEBUG >=1):
-        debug.debug(DEBUG, "saveHeartBeat()    ", "Current Hour="+str(hour), LOGTOFILE)
+        if(hour == 24):
+            hour=0  # Not sure if this will every happen exactly on midnight
 
-    if(hour == 24):
-        hour=0  # Not sure if this will every happen exactly on midnight
-
-    prviousHeartBeat = hour
+        mainGateHeartBeat = hour
         
 def initialiseHeartBeat():
-    global previousHeartBeat
+    global mainGateHeartBeat
     # Get current time from the local clock
     now=time.localtime()
     
     #  Get the current hour from the local clock
     hour=int(now[3])
-    previousHeartBeat=hour
+    mainGateHeartBeat=hour
         
     if(DEBUG >=1):
-        debug.debug(DEBUG, "initialiseHeartBeat()", "Hour="+str(hour)+"heartBeat="+str(previousHeartBeat), LOGTOFILE)
+        debug.debug(DEBUG, "initialiseHeartBeat()", "Hour="+str(hour)+"heartBeat="+str(mainGateHeartBeat), LOGTOFILE)
     
 def checkHeartBeat():
     if(DEBUG >=1):
         debug.debug(DEBUG, "checkHeartBeat()", "Check age of last heart beat", LOGTOFILE)
 
-    global previousHeartBeat
+    global mainGateHeartBeat
     # Get current time from the local clock
     now=time.localtime()
     
@@ -163,10 +163,10 @@ def checkHeartBeat():
     hour=int(now[3])
 
     if(DEBUG >=1):
-        debug.debug(DEBUG, "checkHeartBeat()", "Hour="+str(hour)+" heartBeat="+str(previousHeartBeat), LOGTOFILE)
+        debug.debug(DEBUG, "checkHeartBeat()", "Hour="+str(hour)+" heartBeat="+str(mainGateHeartBeat), LOGTOFILE)
         
     # Check if heartBeat is old
-    if(hour >= previousHeartBeat +1):
+    if(hour >= mainGateHeartBeat +1):
         # display error message
         # 1 long, 5 short = Heartbeat message timed out
         blink.flash(ledPin,1,5)
@@ -258,7 +258,7 @@ def subMain():
             debug.debug(DEBUG, "subprocess.subMain()", "openCount="+ str(counters.openCount) , LOGTOFILE)
         blink.checkButtonPress(3)
         
-        # Check if the previousHeartBeat is not more than one hour old
+        # Check if the previous mainGateHeartBeat is not more than one hour old
         checkHeartBeat()
 
 # This message is displayed after all the methods have been defined
