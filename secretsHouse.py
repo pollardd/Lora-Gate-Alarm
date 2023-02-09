@@ -1,4 +1,4 @@
-ssid = 'Set your Wifi SSID Here'
+ssid = 'Set your Wifi SSID Here in secretsHouse.py'
 password = 'Set your Wifi Password here'
 
 # Shared encryption key and Initialization Vector (IV)
