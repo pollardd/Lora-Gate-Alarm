@@ -1,17 +1,17 @@
 import socket
 import time
 import struct
-#import secretsHouse
 import dateTime
 import sys
 import machine
 import debug
 
+
 def setTime(TimeZoneOffset, host, DEBUG, LOGTOFILE):
     if(DEBUG >=2):
-        debugCounter = debug.debug(2, 999, "setTime()    ", "TimeZoneOffset="+str(TimeZoneOffset), LOGTOFILE)
+        debug.debug(DEBUG, "setTime()", "TimeZoneOffset="+str(TimeZoneOffset), LOGTOFILE)
     if(DEBUG >=2):
-        debugCounter = debug.debug(2, 999, "setTime()    ", "NTP Server="+str(host), LOGTOFILE)
+        debug.debug(DEBUG, "setTime()", "NTP Server="+str(host), LOGTOFILE)
 
     NTP_TIMEOUT = 8
     NTP_DELTA = 2208988800
@@ -33,5 +33,5 @@ def setTime(TimeZoneOffset, host, DEBUG, LOGTOFILE):
 
     if(DEBUG >=3):
         timeStamp=str(dateTime.formattedTime())
-        debugCounter = debug.debug(3, 999, "setTime()    ", "Time After=" + str(timeStamp), LOGTOFILE)
+        debug.debug(DEBUG, "setTime()    ", "Time After=" + str(timeStamp), LOGTOFILE)
 
