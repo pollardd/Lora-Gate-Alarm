@@ -22,24 +22,24 @@ def flash(ledPin, long, short):
     while(count < long):
         led.on()
         #print("LED ON")
-        time.sleep(1.5)
+        time.sleep(1.2)
         led.off()
         #print("LED OFF")
-        time.sleep(1)
+        time.sleep(0.75)
         count = count+1
     # Short
     count=0
     while(count < short):
         led.on()
         # time.sleep(0.5)
-        checkButtonPress(.5)  # Check the button while holding the flash on
+        checkButtonPress(.3)  # Check the button while holding the flash on
         led.off()
         # time.sleep(0.5)
-        checkButtonPress(.5)  # Check the button while holding the flash off
+        checkButtonPress(.3)  # Check the button while holding the flash off
         count = count+1
 
     #time.sleep(1.5)
-    checkButtonPress(1.5)  # Check the button while waiting between flash groups
+    checkButtonPress(1.25)  # Check the button while waiting between flash groups
 
 def checkButtonPress(seconds):
     # If Button pressed clear the flash count
@@ -69,3 +69,4 @@ def getButton():
     if(DEBUG >=3):
         debug.debug(DEBUG, "getButton()    ", "buttonPressed="+ str(buttonPressed), LOGTOFILE)
     return buttonPressed
+
