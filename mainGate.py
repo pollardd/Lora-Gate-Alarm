@@ -111,7 +111,7 @@ def processMessage(msg,err):
         debug.debug(DEBUG, "processMessage(msg,err)", "DSTDEVICE="+DSTDEVICE, LOGTOFILE)
 
     # Don't forget the device SRCDEVICE is the name of this machine (receiving the message)
-    if(destination == SRCSTDEVICE): 
+    if(destination == SRCDEVICE): 
         if(jsonDict["TimeUpdate"] == "True"):
             updateTime(jsonDict)
 
@@ -198,7 +198,7 @@ if(DEBUG >=1):
     led.toggle()    #Turn on board LED on
 
 if(DEBUG >=1):
-    debug.debug(DEBUG, "mainloop()", " " + str(time.localtime()), LOGTOFILE)
+    debug.debug(DEBUG, "mainloop()", " Local Time=" + str(time.localtime()), LOGTOFILE)
 
 # Defind variable to avoid multiple messages in an hour
 previousHour=""
@@ -222,7 +222,7 @@ while True:
     if(minute == "00"):
         if(hour != previousHour):
             # Send Heart Beat Message
-            if(DEBUG >=2):
+            if(DEBUG >=1):
                 debug.debug(DEBUG, "main()", "Send Heart Beat Message " + str(now), LOGTOFILE)
 
             sendJson("Heart Beat")
