@@ -42,4 +42,3 @@ def buildLoraMessage(messageNumber,srcDevice,dstDevice,timeStamp,timeUpdate,batt
         debug.debug(DEBUG, "loraMessage.buildLoraMessage()    ", "jsonLoraMessage type=" + str(type(loraMessage)), LOGTOFILE)
 
     return loraMessage
-
