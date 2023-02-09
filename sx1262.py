@@ -1,9 +1,9 @@
 # DJP
 # =================
 import gc
-#print("sx1262.py() mem before gc="+ str(gc.mem_free()))
+print("sx1262.py() mem before gc="+ str(gc.mem_free()))
 gc.collect()
-#print("sx1262.py mem after gc="+ str(gc.mem_free()))
+print("sx1262.py mem after gc="+ str(gc.mem_free()))
 # =================
 
 from _sx126x import *
