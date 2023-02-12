@@ -18,11 +18,6 @@ import dateTime             # My Date time formatting routine
 import secrets              # Security information required by remote device
 import encryption           # Encrypt and Decrypt routines
 
-            # This solves a weird encryption/decryption error when
-            # the code is auto run on the pico device.  Doesn't occure in Thonny
-            #   File "mpyaes.py", line 48, in verify
-            #   PaddingError: 
-
 DEBUG = constants.DEBUG
 LOGTOFILE = constants.LOGTOFILE
 ENCRYPTION = constants.ENCRYPTION
