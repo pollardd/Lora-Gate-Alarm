@@ -45,7 +45,6 @@ import dateTime     # My Date Time formatting routine
 import blink        # Reuseable code to flash the LED error messages or open gate count
 import constants    # Constants used on all devices
 import counters     # Counter variables shared between modules
-#import encryption   # Encrypt and Decrypt routines
 import webServer    # Publish the web page and listen for connections
 
 # Constants
@@ -123,14 +122,19 @@ def setLocalClock():
         dateStamp=str(dateTime.formattedDate())
         debug.debug(DEBUG, "setLocalClock()", "Date before ntp update=" + str(dateStamp), LOGTOFILE)
 
-    try:     
-        ntpClientTZ.setTime(TIMEZONE, NTPSERVER, DEBUG, LOGTOFILE)
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "setLocalClock()", "TIMEZONE="+str(TIMEZONE), LOGTOFILE)
+        debug.debug(DEBUG, "setLocalClock()", "NTPSERVER="+str(NTPSERVER), LOGTOFILE)
+        debug.debug(DEBUG, "setLocalClock()", "DEBUG="+str(DEBUG), LOGTOFILE)
+        debug.debug(DEBUG, "setLocalClock()", "LOGTOFILE="+str(LOGTOFILE), LOGTOFILE)
+    #try:     
+    ntpClientTZ.setTime(TIMEZONE, NTPSERVER, DEBUG, LOGTOFILE)
 
-    except Exception as errorMsg:
+    #except Exception as errorMsg:
         # This message can not be disabled by DEBUG setting
-        if(DEBUG >=0):
-            debug.debug(DEBUG, "setLocalClock()", "Set Time From Network: Error=" + str(errorMsg), LOGTOFILE)
-        flash(1,3)  # Fatal error, no return from this
+    #    if(DEBUG >=0):
+    #        debug.debug(DEBUG, "setLocalClock()", "Set Time From Network: Error=" + str(errorMsg), LOGTOFILE)
+    #    flash(1,3)  # Fatal error, no return from this
 
     if(DEBUG >=1):
         timeStamp=str(dateTime.formattedTime())
@@ -174,9 +178,9 @@ _thread.stack_size(6*1024)   # Default stack size for thread two is only 4k
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "Init", "Pre Main" , LOGTOFILE)
-print("Init Pre Main mem="+ str(gc.mem_free()))
+print("Init Pre Main mem before gc="+ str(gc.mem_free()))
 gc.collect()
-print("Init Pre Main mem="+ str(gc.mem_free()))
+print("Init Pre Main mem after gc="+ str(gc.mem_free()))
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "Init", "Post Start Thread Two" , LOGTOFILE)
@@ -214,4 +218,4 @@ def mainLoop():
         webServer.main(sta_if,ip)
 
 mainLoop()
-
+    
