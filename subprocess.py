@@ -75,32 +75,34 @@ def cb(events):
         debug.debug(DEBUG, "cb(events()    ", "Lora Event Initiated", LOGTOFILE)
 
     if events & SX1262.RX_DONE:
-        msg, err = loraMessage.sx.recv()
+        message, err = loraMessage.sx.recv()
         error = SX1262.STATUS[err]
-        processMessage(msg, err)
+        processMessage(message, err)
     elif events & SX1262.TX_DONE:  # Local Transmit has been performed
         if(DEBUG >=1):
             debug.debug(DEBUG, "cb(events()    ", "TX Done", LOGTOFILE)
 
-def processMessage(msg,err):
+def processMessage(message,err):
     # Process the incoming message
     if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "Message Received=" + str(msg), LOGTOFILE)
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "msg type="+ str(type(msg)), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "Message Received=" + str(message), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "message type="+ str(type(message)), LOGTOFILE)
     if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "err="+ str(err), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "err="+ str(err), LOGTOFILE)
+    if(constants.ENCRYPTION == True): 
+        message=encryption.decryptMessage(message)          # Decrypt the message 
 
-    decryptedMessage=encryption.decryptMessage(msg)     # Decrypt the message 
-    decodedMsg=decryptedMessage.decode()                # Decode the byte string into a string
-    if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "decodedMsg="+ str(decodedMsg), LOGTOFILE)
+    message=message.decode()                                # Decode the byte string into a string
+
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "processMessage(message,err)    ", "Decoded Message="+ str(message), LOGTOFILE)
     if(DEBUG >=1):    
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "decodedMsg type="+ str(type(decodedMsg)), LOGTOFILE)   
+        debug.debug(DEBUG, "processMessage(message,err)    ", "Decoded Message type="+ str(type(message)), LOGTOFILE)   
     # Load incoming message into a json object
-    jsonDict=json.loads(decodedMsg)
+    jsonDict=json.loads(message)
     if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "jsonDict=" + str(jsonDict), LOGTOFILE)
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "jsonDict type=" + str(type(jsonDict)), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "jsonDict=" + str(jsonDict), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "jsonDict type=" + str(type(jsonDict)), LOGTOFILE)
 
     # Check destination of this message = this device
     # LoRa messages are broadcast and any device can pick them up
@@ -108,8 +110,7 @@ def processMessage(msg,err):
     destination = jsonDict["DstDevice"]
     
     if(DEBUG >=1):
-        debug.debug(DEBUG, "processMessage(msg,err)", "destination="+destination, LOGTOFILE)
-        debug.debug(DEBUG, "processMessage(msg,err)", "DSTDEVICE="+DSTDEVICE, LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)", "destination="+destination, LOGTOFILE)
 
     # Don't forget the device SRCDEVICE is the name of this machine (receiving the message)
     if(destination == SRCDEVICE): 
@@ -232,9 +233,11 @@ def sendTimeUpdate():
     if(DEBUG >=2):
         debug.debug(DEBUG, "sendTimeUpdate()    ", "Message=" + str(message), LOGTOFILE)
 
-    encodedMessage=bytes((message).encode())
-    encryptedMessage=encryption.encryptMessage(encodedMessage)
-    loraMessage.sx.send(encryptedMessage)
+    message=bytes((message).encode())
+    if(ENCRYPTION == True):
+        message=encryption.encryptMessage(message)
+        
+    loraMessage.sx.send(message)
  
 # End of method Definitions.
 
@@ -265,4 +268,3 @@ def subMain():
 # and before the main method is called
 if(DEBUG >=1):
     debug.debug(DEBUG, "Subprocess Init", "End Method Definitions" , LOGTOFILE)
-
