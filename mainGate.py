@@ -18,6 +18,11 @@ import dateTime             # My Date time formatting routine
 import secrets              # Security information required by remote device
 import encryption           # Encrypt and Decrypt routines
 
+            # This solves a weird encryption/decryption error when
+            # the code is auto run on the pico device.  Doesn't occure in Thonny
+            #   File "mpyaes.py", line 48, in verify
+            #   PaddingError: 
+
 DEBUG = constants.DEBUG
 LOGTOFILE = constants.LOGTOFILE
 ENCRYPTION = constants.ENCRYPTION
@@ -56,12 +61,12 @@ def cb(events):
 
     # If Lora message received
     if events & SX1262.RX_DONE:
-        msg, err = loraMessage.sx.recv()
+        message, err = loraMessage.sx.recv()
         error = SX1262.STATUS[err]
         if(DEBUG >=2):
-            debug.debug(DEBUG, "cb(events()", "Message Rec.="+ str(msg), LOGTOFILE)
-            #print('Receive: {}, {}'.format(msg, error))
-        processMessage(msg,err)
+            debug.debug(DEBUG, "cb(events()", "Message Rec.="+ str(message), LOGTOFILE)
+            #print('Receive: {}, {}'.format(message, error))
+        processMessage(message,err)
 
     # If Lora message sent
     elif events & SX1262.TX_DONE:
@@ -82,24 +87,26 @@ def getGateSwitch():
     # Invert the 1-0 so that 1=button pressed 0=not pressed
     return not gateSwitch.value()
 
-def processMessage(msg,err):
+def processMessage(message,err):
     # Process the incoming message
     if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "Message Received=" + str(msg), LOGTOFILE)
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "msg type="+ str(type(msg)), LOGTOFILE)
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "err="+ str(err), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "Message Received=" + str(message), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "message type="+ str(type(message)), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "err="+ str(err), LOGTOFILE)
 
-    decryptedMessage=encryption.decryptMessage(msg)     # Decrypt the message 
-    decodedMsg=decryptedMessage.decode()                # Decode the byte string into a string
+    if(ENCRYPTION == True):
+        message=encryption.decryptMessage(message)             # Decrypt the message
+
+    message=message.decode()                                   # Decode the byte string into a string
     if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "decodedMsg="+ str(decodedMsg), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "Decoded Message="+ str(message), LOGTOFILE)
     if(DEBUG >=1):    
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "decodedMsg type="+ str(type(decodedMsg)), LOGTOFILE)   
+        debug.debug(DEBUG, "processMessage(message,err)    ", "Decodded Message type="+ str(type(message)), LOGTOFILE)   
     
     # Load incoming message into a json object
-    jsonDict=json.loads(decodedMsg)
+    jsonDict=json.loads(message)
     if(DEBUG >=2):
-        debug.debug(DEBUG, "processMessage(msg,err)    ", "jsonDict=" + str(jsonDict), LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)    ", "jsonDict=" + str(jsonDict), LOGTOFILE)
 
     # Check destination of this message = this device
     # LoRa messages are broadcast and any device can pick them up
@@ -107,8 +114,8 @@ def processMessage(msg,err):
     destination = jsonDict["DstDevice"]
     
     if(DEBUG >=1):
-        debug.debug(DEBUG, "processMessage(msg,err)", "destination="+destination, LOGTOFILE)
-        debug.debug(DEBUG, "processMessage(msg,err)", "DSTDEVICE="+DSTDEVICE, LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)", "destination="+destination, LOGTOFILE)
+        debug.debug(DEBUG, "processMessage(message,err)", "DSTDEVICE="+DSTDEVICE, LOGTOFILE)
 
     # Don't forget the device SRCDEVICE is the name of this machine (receiving the message)
     if(destination == SRCDEVICE): 
@@ -165,9 +172,12 @@ def sendJson(textMessage):
     if(DEBUG >=2):
         debug.debug(DEBUG, "sendJson(textMessage)", "Message=" + str(message), LOGTOFILE)
 
-    encodedMessage=bytes((message).encode())
-    encryptedMessage=encryption.encryptMessage(encodedMessage)
-    loraMessage.sx.send(encryptedMessage)
+    message=bytes((message).encode())
+    
+    if(ENCRYPTION == True):
+        message=encryption.encryptMessage(message)
+        
+    loraMessage.sx.send(message)
 
 def startUpMessage():
     # Send Status message to mainHouse
@@ -181,8 +191,15 @@ def startUpMessage():
         gateOpen="True"
     else:
         gateOpen="False"
-        
+    
+    # Send the initial message to MainHouse
     sendJson(textMessage)
+    
+    # This delay following the sendJson command solves a weird
+    # problem with the transmittion of the message to the remote device.
+    # It only occures on the startup message when not running through Thonny.
+    # Makes no sense to me.
+    time.sleep(2)
     
     if(DEBUG >=1):
         debug.debug(DEBUG, "main()    ", "Startup Message Sent", LOGTOFILE)
