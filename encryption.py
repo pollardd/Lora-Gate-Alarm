@@ -14,7 +14,7 @@ def encryptMessage(unencryptedMessage):
 
     if(DEBUG >=2):
         debug.debug(DEBUG, "encryptMessage(unencryptedMessage)", "unencryptedMessage="+ str(unencryptedMessage), LOGTOFILE)
-    if(DEBUG >=2):
+    if(DEBUG >=1):
         debug.debug(DEBUG, "encryptMessage(unencryptedMessage)", "unencryptedMessage Length ="+ str(len(str(unencryptedMessage))), LOGTOFILE)
 
     key = secrets.key
@@ -32,9 +32,9 @@ def encryptMessage(unencryptedMessage):
 def decryptMessage(encryptedMessage):
     if(DEBUG >=1):
         debug.debug(DEBUG, "decryptMessage()", " ", LOGTOFILE)
-    if(DEBUG >=3):
-        debug.debug(DEBUG, "decryptMessage(encryptedMessage)", "encryptedMessage="+ str(encryptedMessage), LOGTOFILE)
     if(DEBUG >=2):
+        debug.debug(DEBUG, "decryptMessage(encryptedMessage)", "encryptedMessage="+ str(encryptedMessage), LOGTOFILE)
+    if(DEBUG >=1):
         debug.debug(DEBUG, "decryptMessage(encryptedMessage)", "encryptedMessage Length="+ str(len(str(encryptedMessage))), LOGTOFILE)
 
     key = secrets.key
