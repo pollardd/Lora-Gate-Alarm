@@ -149,7 +149,7 @@ def flash(long, short):
     # the last reset (Manual button to reset).
 
     # Flash the LED to Indicate an error Long flash then Short flashe(s).
-    # 1 long, 1 short = Low voltage at mainGate.py
+    # 1 long, 1 short = Low voltage at mainGate.py (Less than value set in constants.py)
     # 1 long, 2 short = Unable to connect to Wifi at mainHouse.py
     # 1 long, 3 short = Unable to set system clock at mainHouse.py
     # 1 long, 4 short = Unable to open socket for inbound web page connection
@@ -218,4 +218,3 @@ def mainLoop():
         webServer.main(sta_if,ip)
 
 mainLoop()
-    
