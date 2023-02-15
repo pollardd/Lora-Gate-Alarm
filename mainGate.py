@@ -1,12 +1,15 @@
 # mainGate.py
 #  See more program details in mainHouse.py
 #
+# Link to discussion where Thonny can't connect to pico
+# https://github.com/orgs/micropython/discussions/10738
 # ===========================================================================
 # Keep the SX1262 import at the top to avoid memory fragmentation problem
 from sx1262 import SX1262   #Lora library
 import _sx126x
 from machine import ADC, Pin
 import time
+import utime
 import dateTime
 import json
 
@@ -17,6 +20,11 @@ import constants            # Constants used on all devices
 import dateTime             # My Date time formatting routine
 import secrets              # Security information required by remote device
 import encryption           # Encrypt and Decrypt routines
+
+            # This solves a weird encryption/decryption error when
+            # the code is auto run on the pico device.  Doesn't occure in Thonny
+            #   File "mpyaes.py", line 48, in verify
+            #   PaddingError: 
 
 DEBUG = constants.DEBUG
 LOGTOFILE = constants.LOGTOFILE
@@ -36,9 +44,10 @@ vsys = ADC(26)                      # reads the system input voltage from Pico L
 charging = Pin(24, Pin.IN)          # reading GP24 tells us whether or not USB power is connected
 conversion_factor = 3 * 3.3 / 65535 # Converts the returned value to Volts
 
-messageNumber=0             # Sequential LoRa message number.  (mainHouse.py starts at 10000)
-startUp = True              # Send start up message immidately to mainHouse
-led.off()                   # Make sure the led is off
+messageNumber=0                        # Sequential LoRa message number.  (mainHouse.py starts at 10000)
+startUp = True                         # Send start up message immidately to mainHouse
+led.off()                              # Make sure the led is off
+mainGateHeartBeat = time.localtime()   # Counts the number of seconds since last heartbeat sent
 
 # Pin Definitions
 gateSwitch =  Pin(14, Pin.IN, Pin.PULL_UP)  # Physical Pin 19 Gnd = 18
@@ -199,6 +208,29 @@ def startUpMessage():
     if(DEBUG >=1):
         debug.debug(DEBUG, "main()    ", "Startup Message Sent", LOGTOFILE)
 
+def heartBeatMessage():
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "heartBeatMessage()", "", LOGTOFILE)
+
+    global mainGateHeartBeat
+    
+    # Get current time from the local clock
+    now=time.localtime()
+        
+    # get the number of seconds between the two time tupples
+    seconds=utime.mktime(now)-utime.mktime(mainGateHeartBeat)
+    if(DEBUG >=2):
+        debug.debug(DEBUG, "heartBeatMessage()", "Seconds="+str(seconds), LOGTOFILE)
+
+    if(seconds >= constants.MAXHEARTBEAT / 2):
+        # Send the meassage if 50% of the time has passed
+        if(DEBUG >=1):
+            debug.debug(DEBUG, "heartBeatMessage()", "Send The Heartbeat", LOGTOFILE)
+
+        sendJson("Heart Beat")
+        
+        #Reset the Heartbeat timmer
+        mainGateHeartBeat = time.localtime()        
 
 # End of method Defintions.
 
@@ -206,39 +238,23 @@ def startUpMessage():
 # DP Not sure how it works.  Seems to run on a seperate process
 loraMessage.sx.setBlockingCallback(False, cb)
 
-if(DEBUG >=1):
+if(DEBUG >=0):
     led.toggle()    #Turn on board LED on
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "mainloop()", " Local Time=" + str(time.localtime()), LOGTOFILE)
 
-# Defind variable to avoid multiple messages in an hour
-previousHour=""
-
 while True:
+    if(DEBUG >=1):
+        debug.debug(DEBUG, "Main While Loop", "", LOGTOFILE)
+
     # Send initial startup message
     if(startUp):
         startUpMessage()
         startUp=False
     
-    # Send heart beat message if the minutes are 00
-    # i.e. once per hour on the hour.
-    now=time.localtime()
-    # Get the current hour in two digit format
-    hour=dateTime.zfl(str(now[3]),2)
-    # Get the current minute in two digit format
-    minute=dateTime.zfl(str(now[4]),2)
-    if(DEBUG >=2):
-        debug.debug(DEBUG, "mainloop()", "Minute=" + str(minute), LOGTOFILE)
-
-    if(minute == "00"):
-        if(hour != previousHour):
-            # Send Heart Beat Message
-            if(DEBUG >=1):
-                debug.debug(DEBUG, "main()", "Send Heart Beat Message " + str(now), LOGTOFILE)
-
-            sendJson("Heart Beat")
-            previousHour=hour
+    # Send heart beat message
+    heartBeatMessage()
 
     # Only send a message if the gate status has changed
     # Look for gate open signal
