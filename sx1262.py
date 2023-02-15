@@ -1,12 +1,15 @@
 # DJP
 # =================
 import gc
-print("sx1262.py() mem before gc="+ str(gc.mem_free()))
+print("sx1262.py() 1 mem before gc="+ str(gc.mem_free()))
 gc.collect()
-print("sx1262.py mem after gc="+ str(gc.mem_free()))
+print("sx1262.py 1 mem after gc="+ str(gc.mem_free()))
 # =================
-
 from _sx126x import *
+
+print("sx1262.py() 2 mem before gc="+ str(gc.mem_free()))
+gc.collect()
+print("sx1262.py 2 mem after gc="+ str(gc.mem_free()))
 from sx126x import SX126X
 
 _SX126X_PA_CONFIG_SX1262 = const(0x00)
