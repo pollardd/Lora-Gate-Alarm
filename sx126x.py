@@ -1,7 +1,7 @@
-#import gc
-#print("sx126x.py mem before gc="+ str(gc.mem_free()))
-#gc.collect()
-#print("sx126x.py mem after gc="+ str(gc.mem_free()))
+import gc
+print("sx126x.py mem before gc="+ str(gc.mem_free()))
+gc.collect()
+print("sx126x.py mem after gc="+ str(gc.mem_free()))
 
 from _sx126x import *
 
