@@ -245,7 +245,7 @@ if(DEBUG >=1):
     debug.debug(DEBUG, "mainloop()", " Local Time=" + str(time.localtime()), LOGTOFILE)
 
 while True:
-    if(DEBUG >=1):
+    if(DEBUG >=2):
         debug.debug(DEBUG, "Main While Loop", "", LOGTOFILE)
 
     # Send initial startup message
