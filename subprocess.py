@@ -15,6 +15,7 @@ import utime
 import machine
 import json
 import _thread
+sLock = _thread.allocate_lock()
 
 # Home baked imports
 import debug        # My debuging routine
@@ -37,6 +38,7 @@ messageNumber=10000     # Sequential message number.  (mainGate.py starts at 1)
 gateOpen="False"        # mainHouse device does not monitor the gate
 batteryPercent=0        # mainHouse device is always connected to mains power supply
 mainGateHeartBeat=0     # Used to chech how long since the last Heart Beat was received
+mainGateFileName="batteryLevel.txt"    # Holds the Battery level percentage and last update time
 
 # Pin Definitions
 ledPin = 5                               # Physical Pin 7  Gnd = 8
@@ -114,6 +116,7 @@ def processMessage(message,err):
         debug.debug(DEBUG, "processMessage(message,err)", "message type="+ str(type(message)), LOGTOFILE)
     if(DEBUG >=2):
         debug.debug(DEBUG, "processMessage(message,err)", "err="+ str(err), LOGTOFILE)
+
     if(constants.ENCRYPTION == True): 
         message=encryption.decryptMessage(message)          # Decrypt the message 
 
@@ -151,7 +154,18 @@ def checkBatteryPercent(jsonDict):
     if(DEBUG >=1):
         debug.debug(DEBUG, "CheckBatteryPercent()", "batteryPercent="+str(batteryPercent), LOGTOFILE)
         debug.debug(DEBUG, "CheckBatteryPercent()", "minBattery="+str(minBattery), LOGTOFILE)
-    
+
+    # Save Battery Values to file to be read from the webserver (main thread)
+    # First line = battery percentage and Second Line is the time stamp
+    # No history is stored the previous values are simply overwritten
+    sLock.acquire()
+    fileHandle = open(mainGateFileName,"w")
+    fileHandle.write(str(batteryPercent))
+    fileHandle.write("\n")
+    fileHandle.write(str(time.localtime()))
+    fileHandle.close()
+    sLock.release()
+
     if(batteryPercent <= minBattery):
         if(DEBUG >=1):
             debug.debug(DEBUG, "CheckBatteryPercent()", "LowBattery Warning="+str(minBattery)+"%", LOGTOFILE)
