@@ -83,8 +83,8 @@ def getBatteryPercentage():
 
     voltage = vsys.read_u16() * conversion_factor
     batteryPercentage = 100 * ((voltage - EMPTYBATTERY) / (FULLBATTERY - EMPTYBATTERY))
-    #if batteryPercentage > 100:  #If it's more than 100 then the empty full values are wrong
-    #    batteryPercentage = 100.00
+    if batteryPercentage > 100:  #If it's more than 100% then make it 100%
+        batteryPercentage = 100.00
     return round(batteryPercentage,1)  # Just leave one decimal place
 
 def getGateSwitch():
@@ -228,6 +228,7 @@ def heartBeatMessage():
             debug.debug(DEBUG, "heartBeatMessage()", "Send The Heartbeat", LOGTOFILE)
 
         sendJson("Heart Beat")
+        time.sleep(2)
         
         #Reset the Heartbeat timmer
         mainGateHeartBeat = time.localtime()        
@@ -264,6 +265,7 @@ while True:
         if(DEBUG >=1):
             debug.debug(DEBUG, "main()    ", "The Gate is Open", LOGTOFILE)
         sendJson("Gate is Open")
+        time.sleep(2)
 
     # If gate status has changed from open to closed
     if(gateSwitch()==0 and gateOpen=="True"):
@@ -272,6 +274,7 @@ while True:
         if(DEBUG >=1):
             debug.debug(DEBUG, "main()    ", "The Gate is Closed", LOGTOFILE)
         sendJson("Gate is Closed")
+        time.sleep(2)
     
     # Don't loop to fast and waste power
     # How fast can a car get through with someone else opening and closing the gate?
