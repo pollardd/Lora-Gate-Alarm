@@ -72,4 +72,5 @@ Modules and examples from the code below are used as is or modified as required.
 
 ## How it works
 For a full description see my project page on Core Electronics where I sourced most of the hardware.
-<TODO> Add link to project page here once it is released
+A DRAFT VERSION of that file is contained within this repository 
+https://github.com/pollardd/Lora-Gate-Alarm/raw/main/DRAFT%20-%20LORA%20Gate%20Alarm%20-%20Core%20Electronics%20-%20Project%20Template.pdf
