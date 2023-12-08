@@ -10,8 +10,14 @@ This project uses the follwoing hardware
       <BR>NOTE: The LoRa modules above included a battery and external antenna (when I bought them)
 - 1x Small Speaker (salvaged from an old telephone) 
 - 1x Microswitch to sense the open gate (salvaged from a broken angle grinder)
+- or
+- 1x PiicoDev Magnetometer (way easier than mounting the above switch)
+- 1x Button (on while pressed) connect pin 30 to Gnd to reset the device
 - 1x LED with resistor (200 ohm?) to indicate open gate count and error messages
 - Mounting boxes etc.
+
+NOTE: PiicoDev Magnetometer not listed in my parts list.  You can find it here.
+https://core-electronics.com.au/piicodev-magnetometer-qmc6310.html
 
 ## Software Version
 - MicroPython v1.19.1-850-gfe2a8332f on 2023-02-01
@@ -20,11 +26,14 @@ This project uses the follwoing hardware
 
 ## Installation
 - Modify secrets.py with generated encryption keys using GenerateEncryptionKey.py
+  Note: In Version 2.0, Encryption disabled in constants.py.  (Needs more testing).
 - Modify secretsHouse.py with your Wifi SSID and password
 - Set a time zone in hours plus or minus UTC in constants.py  (no automatic daylight savings adjustments are made)
 - Set a NTP time pool server local to you in constants.py 
 - Save the files to the required devices as listed below.
 - Disable debugging in constants.py by setting it to 0 once things are running smoothly
+
+NOTE: Set LOWPOWERMODE to False on remote device while testing connected to Thonny.  It mucks up the USB connection.
 
 The file listing below describes which files are required on the main (house) device and which are required on the remote (gate) device and Both if it is req1uired on both devices.
 
