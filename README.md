@@ -33,20 +33,25 @@ https://core-electronics.com.au/piicodev-magnetometer-qmc6310.html
 - Save the files to the required devices as listed below.
 - Disable debugging in constants.py by setting it to 0 once things are running smoothly
 
-NOTE: Set LOWPOWERMODE to False on remote device while testing connected to Thonny.  It mucks up the USB connection.
+NOTE: While testing set LOWPOWERMODE to False (constants.py) on remote device while connected to Thonny.  It mucks up the USB connection and confuse the shit out of you.
 
 The file listing below describes which files are required on the main (house) device and which are required on the remote (gate) device and Both if it is req1uired on both devices.
 
 | FileName                   | Location | Device  | Description |
 | ---------------------------|----------|---------|-------------|
+| BatteryLevel.txt           | Main     |         | Stores the last know battery level and update time |
+| compass.py                 | Remote   |         | Used to calibrate the Magnetometer.  (only run once manually) |
 | blink.py                   | Main     |         | Display Errors and Remote gate open events on the LED |
 | constants.py               | Both     |         | Debug and encryption settings |
 | counters.py                | Main     |         | Stores the gate open count |
 | dateTime.py                | Main     |         | Formats date time to your prefferences / location. |
 | debug.py                   | Both     |         | Debug Routines |
 | debugCounter.txt           | Both     |         | Shared location for debug counter / ID |
+| diskFree.py                | Both     |         | Returns amount of free storage space |
 | encryption.py              | Both     |         | Shared calls to encrypt decrypt routines |
+| fileTail.py                | Main     |         | Returns the specified number of lines from the end of a file. |
 | GenerateEncryptionKey.py   | Main     |         | Generate secret encryption key to be saved on all devices (secrets.py) |
+| getHeadingDiff.py          | Remote   |         | Returns the current heading (gate angle) compared to the starting heading|
 | loraMessage.py             | Both     |         | Format message into Json format |
 | mainGate.py <BR>(Rename to main.py)| Remote   |         | Main entry point for remote devices.  Save as main.py to auto start |
 | mainHouse.py <BR>(Rename to main.py)| Main     |         | Main entry point for main device.  Save as main.py to auto start |
@@ -55,11 +60,11 @@ The file listing below describes which files are required on the main (house) de
 | secrets.py                 | Remote   |         | Contains Encryption and Decryption keys |
 | secretsHouse.py            | Main     |         | Contains Encryptions keys and WIFI creds. |
 | subprocess.py              | Main     |         | Run second thread to receive and transmit lora messages |
-| sx1262.py                  | Both     |         | Third Party Lora Module code |
-| sx126x.py                  | Both     |         | Third Party Lora Module code |
+| sx1262.py                  | Both     |         | Third Party Lora Communications Module code |
+| sx126x.py                  | Both     |         | Third Party Lora Communications Module code |
 | tone.py                    | Main     |         | Play
-| webServer.py               | Main     |         | User web interface for monitoring and counter reset |
-| _sx126x.py                 | Both     |         |  Third Party Lora Module code |
+| webServer.py               | Main     |         | User web interface for monitoring |
+| _sx126x.py                 | Both     |         |  Third Party Lora Communications Module code |
 
 ## Debugging
 Debugging output commands are throughout the code. The level of output can be controlled from settings within constants.py. `DEBUG=0` is off. Available levels are 0-3. Output is to the console and to a file. File output can be disabled in `constants.py`. `LOGTOFILE = False`. Disable logging to file when testing is complete to avoid running out of storage space in the small file system. Output is to a file on the Pico named `debugLog.csv`. This file can be deleted and it will automatically recreated as required.
