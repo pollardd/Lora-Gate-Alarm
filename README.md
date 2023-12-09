@@ -31,6 +31,7 @@ https://core-electronics.com.au/piicodev-magnetometer-qmc6310.html
 - Set a time zone in hours plus or minus UTC in constants.py  (no automatic daylight savings adjustments are made)
 - Set a NTP time pool server local to you in constants.py 
 - Save the files to the required devices as listed below.
+- Configure FULLBATTERY= and EMPTYBATTERY= IN mainGate.py to contain the maximum and minumum voltage levels for your battery. These will be converted and displeyed as a percentage. Trial and error may be required.  Percentage displayed on the internal web page.
 - Disable debugging in constants.py by setting it to 0 once things are running smoothly
 
 NOTE: While testing set LOWPOWERMODE to False (constants.py) on remote device while connected to Thonny.  It mucks up the USB connection and confuse the shit out of you.
