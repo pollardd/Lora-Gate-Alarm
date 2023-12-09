@@ -68,6 +68,7 @@ The file listing below describes which files are required on the main (house) de
 
 ## Debugging
 Debugging output commands are throughout the code. The level of output can be controlled from settings within constants.py. `DEBUG=0` is off. Available levels are 0-3. Output is to the console and to a file. File output can be disabled in `constants.py`. `LOGTOFILE = False`. Disable logging to file when testing is complete to avoid running out of storage space in the small file system. Output is to a file on the Pico named `debugLog.csv`. This file can be deleted and it will automatically recreated as required.
+Version 2.0 includes an option to automatically delete the log file at start up.  A Ten second countdown is displayed on the console.  Exit the program in Thonny if you wish to retain and examin the log.
 
 ## Third Party Software 
 Modules and examples from the code below are used as is or modified as required. Original source and modified code is included in this repository.
