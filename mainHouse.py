@@ -2,7 +2,11 @@
 # Rename to main.py so it executes at startup
 # Intended to run on a Raspberry Pi Pico W (wifi)
 # ==========================================
-#
+# <TODO>
+# # Lora Message fails to send when Encrpytion=True
+# I suspect this is a memory/resource problem
+
+# Notes
 # The Lora Connection and configuration is based on an this example.
 # https://github.com/ehong-tl/micropySX126X
 #
@@ -17,32 +21,25 @@
 # Asked a question re Recursion Limit Error
 # https://stackoverflow.com/questions/75257342/micropython-runtimeerror-maximum-recursion-depth-exceeded
 
-# Not sure why I need this
-# Without the garbage collection, I get the following error message
-# File "sx1262.py", line 2, in <module>
-# MemoryError: memory allocation failed, allocating 4168 bytes
-import gc
-#print("main() mem before gc="+ str(gc.mem_free()))
-gc.collect()
-#print("main() mem after gc="+ str(gc.mem_free()))
+from gc import mem_free, collect
 
-import network      # module that handles connecting to WiFi
-import socket       # module that handles tcp/ip connections
-import urequests    # module handles making servicing and network requests
-import time
-import ntpClientTZ  # Modified ntpClient to include Time Zone adjustment.
-import machine
-import _thread      # We are running the Lora communication code in a seperate process
+#print("main() mem before gc="+ str(mem_free()))
+collect()
+#print("main() mem after gc="+ str(mem_free()))
 
-from machine import Pin, PWM
+from network import WLAN, STA_IF
+from time import sleep
+from _thread import start_new_thread, stack_size
+from machine import Pin, PWM, #ADC
 
 # Home baked imports
+import ntpClientTZ  # Modified ntpClient to include Time Zone adjustment.
 import subprocess   # Methods that are run in Thread 2
 import debug        # My debuging routine
 import secrets      # file Encryption key and IV values
 import secretsHouse # file containing wifi ssid and password 
 import dateTime     # My Date Time formatting routine
-import blink        # Reuseable code to flash the LED error messages or open gate count
+import blink        # Flash and Flash reset routine
 import constants    # Constants used on all devices
 import counters     # Counter variables shared between modules
 import webServer    # Publish the web page and listen for connections
@@ -50,17 +47,16 @@ import webServer    # Publish the web page and listen for connections
 # Constants
 DEBUG = constants.DEBUG
 LOGTOFILE =  constants.LOGTOFILE
+LOGFILENAME = constants.LOGFILENAME
+CLEARDEBUG = constants.CLEARDEBUG
+CLEARDEBUGPAUSE = constants.CLEARDEBUGPAUSE
 ENCRYPTION = constants.ENCRYPTION
 TIMEZONE = constants.TIMEZONE      # Set to your time zone +or- hours from UTC  (No Summertime)
 NTPSERVER = constants.NTPSERVER    # change to a time server pool in your local area
-
+TIMESETHALT = constants.TIMESETHALT
 # Network Variables
 ip=""                   # Global variable to hold the wifi connection IP address
-sta_if = network.WLAN(network.STA_IF)  # Set the network interface name
-
-# Temperature Sensor
-sensor_temp = machine.ADC(4)
-conversion_factor = 3.3 / (65535)
+sta_if = WLAN(STA_IF)  # Set the network interface name
 
 # Pin Definitions
 ledPin = 5                              # Physical Pin 7  Gnd = 8
@@ -68,17 +64,17 @@ led = Pin(ledPin, Pin.OUT)              # Define pin as output
 #button =  Pin(14, Pin.IN, Pin.PULL_UP)  # Physical Pin 19 Gnd = 13
 buzzer = PWM(Pin(13))                   # Physical pin 17 Gnd = 18
 
+debug.clearDebug()  # Clear debug file if CLEARDEBUG is True
+
 # Start a new counter each time the program starts
-if(DEBUG >=1):
+if(DEBUG >=2):
     debug.debug(DEBUG, "Init", "Pre Reset Debug Counter" , LOGTOFILE)
 debug.resetCounter()
-
-if(DEBUG >=1):
+if(DEBUG >=2):
     debug.debug(DEBUG, "Init", "Pre Method Defintions" , LOGTOFILE)
 
 # Method Definitions
 # =========================================
-
 def connectToWifi():
     global ip
     global sta_if
@@ -87,18 +83,22 @@ def connectToWifi():
         debug.debug(DEBUG, "connectToWifi()", "Connecting to WIFI " + secretsHouse.ssid, LOGTOFILE)
 
     connectCount=0
-    sta_if = network.WLAN(network.STA_IF)
+    sta_if = WLAN(STA_IF)
     # Set your SSID and Password in secrets<Device>.py
     sta_if.active(True)                               # Activate the interface
 
     while connectCount<=5:
-        sta_if.connect(secretsHouse.ssid, secretsHouse.password)    # Connect
-        time.sleep(10)
+        try:
+            sta_if.connect(secretsHouse.ssid, secretsHouse.password)    # Connect
+        except Exception as errorMsg:
+           if(DEBUG >=0):
+               debug.debug(DEBUG, "connectToWifi()", "Unable to connect to WIFI: Error=" + str(errorMsg), LOGTOFILE)
+        sleep(10)
         # Test if network is connected
         if not(sta_if.isconnected()):
             connectCount=connectCount+1
             if(DEBUG >=1):
-                debug.debug(DEBUG, "connectToWifi()", "Connecting to WIFI  Count=" + str(connectCount) , LOGTOFILE)
+                debug.debug(DEBUG, "connectToWifi()", "Connecting to WIFI, Fail Count=" + str(connectCount) , LOGTOFILE)
         else:
             connectCount=6
 
@@ -111,7 +111,7 @@ def connectToWifi():
     if(DEBUG >=1):
         ip=sta_if.ifconfig()[0]
         debug.debug(DEBUG, "connectToWifi()", "Connected to WIFI, IP="+str(ip), LOGTOFILE)
-    time.sleep(5)
+        sleep(5)
 
 def setLocalClock():
     # Retrieve Time from smtp and set local clock
@@ -122,19 +122,24 @@ def setLocalClock():
         dateStamp=str(dateTime.formattedDate())
         debug.debug(DEBUG, "setLocalClock()", "Date before ntp update=" + str(dateStamp), LOGTOFILE)
 
-    if(DEBUG >=2):
+    if(DEBUG >=1):
         debug.debug(DEBUG, "setLocalClock()", "TIMEZONE="+str(TIMEZONE), LOGTOFILE)
         debug.debug(DEBUG, "setLocalClock()", "NTPSERVER="+str(NTPSERVER), LOGTOFILE)
-        debug.debug(DEBUG, "setLocalClock()", "DEBUG="+str(DEBUG), LOGTOFILE)
-        debug.debug(DEBUG, "setLocalClock()", "LOGTOFILE="+str(LOGTOFILE), LOGTOFILE)
-    #try:     
-    ntpClientTZ.setTime(TIMEZONE, NTPSERVER, DEBUG, LOGTOFILE)
 
-    #except Exception as errorMsg:
-        # This message can not be disabled by DEBUG setting
-    #    if(DEBUG >=0):
-    #        debug.debug(DEBUG, "setLocalClock()", "Set Time From Network: Error=" + str(errorMsg), LOGTOFILE)
-    #    flash(1,3)  # Fatal error, no return from this
+    timeSetCount=0
+    while (timeSetCount <=10):
+        try:     
+            ntpClientTZ.setTime(TIMEZONE, NTPSERVER, DEBUG, LOGTOFILE)
+            timeSetCount=11  #Exit while loop
+
+        except Exception as errorMsg:
+            timeSetCount = timeSetCount +1
+            if(DEBUG >=0):
+                debug.debug(DEBUG, "setLocalClock()", "Unable to Set Time From Network: Try=" + str(timeSetCount) +" Error=" + str(errorMsg), LOGTOFILE)
+ 
+            if(timeSetCount >=10):
+                if(TIMESETHALT == True):
+                    flash(1,3)  # Fatal error, no return from this
 
     if(DEBUG >=1):
         timeStamp=str(dateTime.formattedTime())
@@ -167,20 +172,20 @@ def flash(long, short):
     else:
         blink.flash(ledPin,long,short)
         
-if(DEBUG >=1):
+if(DEBUG >=2):
     debug.debug(DEBUG, "Init", "End of Method Definition" , LOGTOFILE)
 
 # End of method Definitions.
 
-# Start a new thread for Lora Communications and button monitoring
+# Start a new sub thread for Lora Communications and button monitoring
 # The main thread runs the Web Server.
-_thread.stack_size(6*1024)   # Default stack size for thread two is only 4k
+stack_size(6*1024)   # Default stack size for thread two is only 4k
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "Init", "Pre Main" , LOGTOFILE)
-print("Init Pre Main mem before gc="+ str(gc.mem_free()))
-gc.collect()
-print("Init Pre Main mem after gc="+ str(gc.mem_free()))
+#print("Init Pre Main mem before gc="+ str(mem_free()))
+collect()
+#print("Init Pre Main mem after gc="+ str(mem_free()))
 
 if(DEBUG >=1):
     debug.debug(DEBUG, "Init", "Post Start Thread Two" , LOGTOFILE)
@@ -203,7 +208,7 @@ def mainLoop():
     setLocalClock()
 
     # Start thread two
-    _thread.start_new_thread(subprocess.subMain,())
+    start_new_thread(subprocess.subMain,())
 
     while True:
         # Incoming Messages Events handeled in "subprocess.cb(events)"
